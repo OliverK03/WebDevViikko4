@@ -1,0 +1,70 @@
+name: classroom-tests
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-and-grade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci || npm install
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run tests (JSON)
+        run: npm run test:json
+
+      - name: Run tests (HTML)
+        run: npm run test:html
+
+      - name: Grade (0–10, 1 piste/spec jos kaikki alatestit pass)
+        run: |
+          node -e "
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('results.json','utf8'));
+
+          const perFile = new Map();
+          const visit = (suite) => {
+            for (const s of suite.suites || []) visit(s);
+            for (const spec of suite.specs || []) {
+              for (const t of spec.tests || []) {
+                const file = (t.location && t.location.file) || suite.title || 'unknown';
+                const thisTestPassed = (t.results || []).every(r => r.status === 'passed');
+                if (!perFile.has(file)) perFile.set(file, true);
+                if (!thisTestPassed) perFile.set(file, false);
+              }
+            }
+          };
+          for (const root of data.suites || []) visit(root);
+
+          const total = perFile.size;
+          const passed = [...perFile.values()].filter(Boolean).length;
+          const score = total === 0 ? 0 : Math.round((passed/total)*10);
+          const out = { score, max_score: 10, info: { passed, total } };
+          fs.writeFileSync('score.json', JSON.stringify(out, null, 2));
+          console.log(out);
+          "
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          if-no-files-found: ignore
+
+      - name: Upload autograding results
+        uses: actions/upload-artifact@v4
+        with:
+          name: autograding-results
+          path: |
+            results.json
+            score.json
+          if-no-files-found: error

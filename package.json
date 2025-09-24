@@ -1,0 +1,19 @@
+{
+  "name": "viikko4",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173 --strictPort",
+    "test": "playwright test",
+    "test:json": "playwright test --reporter=json > results.json || true",
+    "test:html": "playwright test --reporter=html || true"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.1",
+    "@types/node": "^24.5.2",
+    "vite": "^7.1.7"
+  }
+}
