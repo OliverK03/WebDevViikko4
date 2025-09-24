@@ -37,6 +37,53 @@ Jos ajat usein testejä peräkkäin, voit pitää preview’n auki omassa termin
     Tällöin Playwright havaitsee olemassa olevan palvelimen (asetuksella reuseExistingServer: !process.env.CI) eikä käynnistä sitä uudelleen. Muista kuitenkin tehdä uusi `npm run build`, kun muutat sovelluskoodia, jotta preview palvelee tuoreinta versiota.
 
 
+## Mihin tiedostoihin koodaat? (**Tärkeää**)
+
+Tämä repo on luotu Vite **Vanilla JS** -pohjaan. **Kaikki viiden tehtävän UI-komponentit ja logiikat tulee toteuttaa suoraan etusivulle** (polku `/`), jotta automaatiotestit löytävät ne ilman navigointia.
+
+- **`index.html`**  
+  - Luo tänne viisi erillistä `<section>`-osiota: **Profiilikortti**, **Laskuri**, **RGB-paneli**, **Tehtävälista** ja **Laskin**.  
+  - Osiot ovat **näkyvissä oletuksena** (ei piilotettuna välilehden, modaalin tai reitityksen taakse).
+  - Pidä selkeät labelit/placeholderit, jotta testit löytävät kentät (ohjeet alla).
+
+- **`src/main.js`**  
+  - Kirjoita tapahtumankäsittelijät ja DOM-päivityslogiikka tänne **tai** jaa alitiedostoihin (esim. `src/tasks/profile.js`, `src/tasks/counter.js` …) ja **tuo ne** `main.js`-tiedostoon:  
+    ```js
+    import './tasks/profile.js';
+    import './tasks/counter.js';
+    // ...
+    ```
+  - Varmista, että moduulit suoritetaan sivun latautuessa (pelkkä import riittää).
+
+- **`src/style.css`**  
+  - Tyylit tänne (tai erillisiin .css-tiedostoihin, jotka tuot `index.html`:stä tai `main.js`:stä).
+
+- **Älä siirrä tehtäviä eri sivuille** (esim. `profile.html`), äläkä vaadi erillistä ”Siirry tehtävään” -navigointia. Testit avaavat **pääsivun** (`/`) ja tarkistavat komponentit sieltä.
+
+Pohjarakenne-esimerkki `index.html`:
+```html
+<!doctype html>
+<html lang="fi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Viikko 4</title>
+  </head>
+  <body>
+    <main>
+      <section class="profile">…</section>
+      <section class="counter">…</section>
+      <section class="rgb-panel">…</section>
+      <section class="todos">…</section>
+      <section class="calculator">…</section>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
+```
+
+---
+
 ## Tehtävät (kuvaukset, UI-rakenne ja logiikka)
 
 ### 1) Profiilikortti
@@ -54,25 +101,26 @@ Jos ajat usein testejä peräkkäin, voit pitää preview’n auki omassa termin
     <p class="profile-email">—</p>
     <p class="profile-age">—</p>
   </article>
+
+  <!-- valinnainen -->
+  <button type="button">Päivitä</button>
 </section>
 ```
 
 **Käyttölogiikka:**
-- Kun kenttiin kirjoitetaan (tai painetaan erillistä “Päivitä”-nappia, jos haluat), kortin tekstit päivittyvät näkyviin:
-  - Nimi: esimerkiksi `Ada Lovelace`
-  - Sähköposti: `ada@example.com`
-  - Ikä: `36`
+- Päivitys voi tapahtua **automaattisesti** syötteen muuttuessa **tai** ”**Päivitä**”-napista.
+- Nimi: esim. `Ada Lovelace`, Sähköposti: `ada@example.com`, Ikä: `36` → näkyvät kortissa tekstinä.
 
-**Testit tarkistavat:** että jokainen arvo todella **näkyy sivulla** käyttäjän syötön jälkeen.
+**Testit tarkistavat:** arvot **näkyvät** syötön jälkeen. (Testi klikkaa ”Päivitä”, jos sellainen on.)
 
 **Vinkkejä:**
-- Päivitä tekstit esim. `element.textContent = input.value.trim()` tapahtumakuuntelijalla (`input`/`change`/`click`).
-- Älä piilota tulosta pelkkään `title`/`aria-label` -attribuuttiin; sen pitää olla näkyvää tekstiä.
+- `element.textContent = input.value.trim()` `input`/`change`/`click`-kuuntelijalla.
+- Älä piilota tulosta pelkkään attribuuttiin; sen pitää näkyä sivulla.
 
 ---
 
 ### 2) Laskuri (ei negatiivisia)
-**Tavoite:** lukua voi kasvattaa ja pienentää napeilla, mutta arvo ei saa mennä alle nollan. Jos käyttäjä yrittää alle 0, näytä virheilmoitus.
+**Tavoite:** lukua voi kasvattaa ja pienentää napeilla, mutta arvo ei saa mennä alle nollan. Jos käyttäjä yrittää alle 0, näytä virheviesti.
 
 **Rakenne (esimerkki):**
 ```html
@@ -88,18 +136,18 @@ Jos ajat usein testejä peräkkäin, voit pitää preview’n auki omassa termin
 **Käyttölogiikka:**
 - “Lisää” kasvattaa arvoa yhdellä.
 - “Vähennä” pienentää arvoa **vain jos** tulos olisi ≥ 0.
-- Jos käyttäjä yrittää mennä negatiiviseksi, arvo pysyy nollassa **ja** `counter-error` näyttää selkeän viestin (esim. “Arvo ei voi olla negatiivinen.”).
+- Yritys mennä < 0: arvo ei laske, ja `counter-error` näyttää selkeän viestin (esim. “Arvo ei voi olla negatiivinen.”).
 
-**Testit tarkistavat:** että arvo kasvaa, ei mene < 0 ja virheviesti **näkyy** yrityksestä mennä negatiiviseksi.
+**Testit tarkistavat:** kasvu, suojaraja 0 ja **näkyvä** virheviesti.
 
 **Vinkkejä:**
-- Parsinta: `value = Number(elem.textContent)`.
-- Päivitä virheilmoitus näkyviin piilottamisen sijaan (esim. `style.display = ""` tai lisää/poista `hidden`).
+- `value = Number(elem.textContent)` ja `elem.textContent = value + 1`.
+- Näytä/peitä virheilmoitus tyylillä tai `hidden`-attribuutilla.
 
 ---
 
 ### 3) RGB-paneli
-**Tavoite:** kolme syötekenttää (R, G, B) väliltä 0–255. Kun arvot ovat kelvolliset, värilaatikon taustaväri päivittyy. Virheellisestä arvosta näytetään virheviesti.
+**Tavoite:** kolme syötekenttää (R, G, B) väliltä 0–255. Kelvollisilla arvoilla värilaatikon taustaväri päivittyy; virheellisestä arvosta näytetään virheviesti.
 
 **Rakenne (esimerkki):**
 ```html
@@ -110,19 +158,18 @@ Jos ajat usein testejä peräkkäin, voit pitää preview’n auki omassa termin
 
   <div class="color-box" style="width:120px;height:80px;"></div>
   <p class="rgb-error" aria-live="polite"></p>
+
+  <!-- valinnainen -->
+  <button type="button">Päivitä väri</button>
 </section>
 ```
 
 **Käyttölogiikka:**
-- Kun käyttäjä syöttää **kelvolliset** arvot kaikkiin kolmeen kenttään, aseta laatikolle tyyli:  
-  `div.style.backgroundColor = 'rgb(R, G, B)'`
-- Jos jokin arvo on puuttuva tai rajojen ulkopuolella, **älä** päivitä väriä ja näytä virheviesti (esim. “Arvojen tulee olla välillä 0–255.”).
+- Kun R=120, G=80, B=200, laatikon `backgroundColor` on täsmälleen `rgb(120, 80, 200)`.
+- Jos jokin arvo puuttuu tai on rajojen ulkopuolella, älä päivitä väriä – näytä virheviesti (esim. “Arvojen tulee olla välillä 0–255.”).
+- Päivitys voi tapahtua automaattisesti tai “Päivitä väri” -napista.
 
-**Testit tarkistavat:** että kelvollisilla arvoilla taustaväri on **täsmälleen** `rgb(120, 80, 200)` ja virheellisestä arvosta tulee **näkyvä** virheviesti.
-
-**Vinkkejä:**
-- Älä “hiljaa korjaa” (clamp) arvoja; näytä **virhe**.
-- Voit päivittää väriä `input`-tapahtumassa tai “Päivitä”-napilla, kunhan lopputulos toimii.
+**Testit tarkistavat:** juuri `rgb(120, 80, 200)` ja virheestä **näkyvä** viesti.
 
 ---
 
@@ -140,14 +187,9 @@ Jos ajat usein testejä peräkkäin, voit pitää preview’n auki omassa termin
 ```
 
 **Käyttölogiikka:**
-- Kun käyttäjä kirjoittaa esim. “Osta maitoa” ja painaa “Lisää”, luo uusi `<li>` ja aseta sen tekstiksi syötteen arvo.
-- Voit tyhjentää kentän lisäyksen jälkeen.
+- Kirjoita “Osta maitoa” → “Lisää” → listaan syntyy uusi `<li>`, jonka teksti on “Osta maitoa”.
 
-**Testit tarkistavat:** että listaan ilmestyy uusi kohta ja **viimeisen** listakohdan teksti vastaa syötettä (esim. “Osta maitoa”).
-
-**Vinkkejä:**
-- Luo elementti: `const li = document.createElement('li')`.
-- Älä unohda liittää `li` osaksi `ul`-elementtiä (`appendChild` / `append`).
+**Testit tarkistavat:** että viimeinen `<li>` sisältää syötteen tekstin.
 
 ---
 
@@ -170,14 +212,11 @@ Jos ajat usein testejä peräkkäin, voit pitää preview’n auki omassa termin
 ```
 
 **Käyttölogiikka:**
-- Kun käyttäjä syöttää luvut ja valitsee operaation, painike laskee tuloksen ja näyttää sen `#result`-elementissä.
-- Jos jakaja on 0 ja op on “/”, älä laske — näytä **virheviesti** (esim. “Nollalla ei voi jakaa.”).
+- Syötä luvut, valitse operaatio ja paina “Laske” **tai** laske heti operaation valinnasta.
+- 5+7=12, 10−3=7, 4*6=24, 20/5=4 → näytetään `#result`-elementissä.
+- 10/0 → älä laske, näytä virheviesti (esim. “Nollalla ei voi jakaa.”).
 
-**Testit tarkistavat:** että 5+7=12, 10−3=7, 4*6=24, 20/5=4 **näkyvät** tuloksina sekä nollalla jakamisesta tulee **näkyvä** virhe.
-
-**Vinkkejä:**
-- Muunna merkkijonot numeroiksi: `const a = Number(inputA.value)` jne.
-- Voit toteuttaa logiikan `switch(op) { case '+': ... }`.
+**Testit tarkistavat:** tulokset näkyvät ja virheviesti nollalla jaosta näkyy. (Testi klikkaa “Laske”, jos sellainen on.)
 
 ---
 
@@ -185,22 +224,34 @@ Jos ajat usein testejä peräkkäin, voit pitää preview’n auki omassa termin
 
 Nämä **eivät ole pakollisia**, mutta helpoimmat tavat varmistaa, että automaattitestit löytävät oikeat elementit:
 
-- Käytä **label**-elementtejä tai selkeitä **placeholder**-tekstejä:
-  - Profiilikortti: “Nimi”, “Sähköposti”, “Ikä”.
-  - RGB: “R”, “G”, “B”.
+- **Käytä label- tai placeholder-tekstejä**:  
+  - Profiilikortti: “Nimi”, “Sähköposti”, “Ikä”.  
+  - RGB: “R”, “G”, “B”.  
   - Tehtävälista: “Tehtävä”.
-- Painikkeiden tekstit:
-  - Laskuri: “Lisää”, “Vähennä” (tai “+”, “−”).
-  - Tehtävälista: “Lisää”.
-  - Laskin: “Laske” (tai vaihtoehtoisesti suorat op-napit “+”, “−”, “*”, “/” — molemmat käy).
-- Anna tulos-/kohde-elementeille jokin seuraavista tunnisteista (testit etsivät näitä):
-  - **Laskuriarvo:** `[data-counter]`, `#counter`, `#counterValue` tai `.counter-value`.
-  - **Värilaatikko:** `.color-box`, `#colorBox` tai `[data-color-box]`.
-  - **Laskimen tulos:** `#result`, `.result` tai `[data-result]`.
-  - **Lista:** `[data-list]` tai tavallinen `<ul>`.
-- Virheilmoitukset:
-  - Näytä ne **sivulla** (ei pelkkä `alert`) ja anna niille selkeä teksti, jossa esiintyy jokin sanoista **“virhe”**, **“invalid”**, **“kelvoton”** tai **“0–255”** (RGB), jotta viesti on helposti tunnistettavissa.
-  - Käytä `aria-live="polite"` niin ruudunlukija havaitsee muutokset.
+
+- **Nappien tekstit**:  
+  - Laskuri: “Lisää”, “Vähennä” (tai “+”, “−”).  
+  - Tehtävälista: “Lisää”.  
+  - Laskin: “Laske” (tai suorat op-napit “+”, “−”, “*”, “/”).
+
+- **Tunnisteet (testit etsivät näitä, mutta eivät vaadi kaikkia)**:  
+  - Laskuriarvo: `[data-counter]`, `#counter`, `#counterValue`, `.counter-value`  
+  - Värilaatikko: `.color-box`, `#colorBox`, `[data-color-box]`  
+  - Laskimen tulos: `#result`, `.result`, `[data-result]`  
+  - Lista: `[data-list]` tai tavallinen `<ul>`
+
+- **Virheilmoitukset**:  
+  - Näytä sivulla (ei pakollinen `alert`).  
+  - Tekstissä saa esiintyä joku näistä: “**virhe**”, “**negatiiv**”, “**invalid**”, “**0–255**” (RGB) → testit tunnistavat joustavasti.
+
+---
+
+## Yhteensopivuus testien kanssa
+
+- Kaikki komponentit ovat **samalla sivulla** (`/`) ja **näkyvissä**.  
+- Profiilikortti ja RGB: päivitys voi tapahtua **automaattisesti tai napista** – testit tukevat molempia.  
+- Laskin: tulos voi syntyä **napista tai heti operaattorin valinnasta** – testit tukevat molempia.  
+- Laskuri: virheestä riittää mikä tahansa teksti, jossa esiintyy “virhe” **tai** sanaan *negatiiv* viittaava ilmaus – testit hyväksyvät molemmat.
 
 ---
 
@@ -209,5 +260,3 @@ Nämä **eivät ole pakollisia**, mutta helpoimmat tavat varmistaa, että automa
 - 1 spec/tehtävä. Tehtävä on **hyväksytty** vain, jos sen kaikki alatestit menevät läpi.
 - Lopullinen pistemäärä skaalataan **0–10** kaavalla `round(läpisseet / kaikki * 10)`.
 - CI tallettaa **HTML-raportin** (Playwright) ja `score.json`-tiedoston artefakteihin.
-
-Onnea matkaan!

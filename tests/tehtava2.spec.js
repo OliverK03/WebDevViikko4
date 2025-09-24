@@ -9,7 +9,7 @@ test.describe('Tehtävä 2: Laskuri', () => {
 
   test('Lisää/Vähennä, ei negatiivista ja virheilmoitus', async ({ page }) => {
     const inc = page.getByRole('button', { name: /lisää|plus|\+/i });
-    const dec = page.getByRole('button', { name: /vähennä|miinus|-\b/i });
+    const dec = page.getByRole('button', { name: /vähennä|miinus|[−-]/i }); // tukee unicode- ja ascii-miinusta
 
     await expect(inc, 'Lisää-nappi puuttuu').toBeVisible();
     await expect(dec, 'Vähennä-nappi puuttuu').toBeVisible();
@@ -23,18 +23,15 @@ test.describe('Tehtävä 2: Laskuri', () => {
       return m ? Number(m[0]) : NaN;
     };
 
-    // Nosta arvoa
     await inc.click();
     expect(await getNumber(), 'Arvon kasvatus ei toiminut').toBeGreaterThanOrEqual(1);
 
-    // Yritä laskea negatiiviseksi
     for (let i = 0; i < 20; i++) await dec.click();
 
-    // Arvo ei saa mennä alle nollan
     expect(await getNumber(), 'Arvo meni negatiiviseksi').toBeGreaterThanOrEqual(0);
 
-    // Virheviesti näkyy yrityksestä mennä < 0
-    const error = page.getByText(/virhe|ei voi mennä negatiiviseksi|invalid/i);
+    // Salli "virhe" TAI mikä tahansa sana, jossa esiintyy "negatiiv"
+    const error = page.getByText(/virhe|negatiiv|invalid/i);
     await expect(error, 'Virheviesti puuttuu negatiivisesta yrityksestä').toBeVisible();
   });
 });

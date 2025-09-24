@@ -22,6 +22,11 @@ async function chooseOp(page, opText) {
   await page.getByRole('button', { name: new RegExp(`^\\s*${opText}\\s*$`, 'i') }).click();
 }
 
+async function clickCalculateIfPresent(page) {
+  const calcBtn = page.getByRole('button', { name: /laske|calculate/i });
+  if (await calcBtn.count()) await calcBtn.first().click();
+}
+
 function resultLocator(page) {
   return page.locator('#result, .result, [data-result]').first();
 }
@@ -33,21 +38,25 @@ test.describe('Tehtävä 5: Laskin', () => {
     expect(await fillBy(page, ['ensimmäinen','a','luku 1','num1'], 5)).toBeTruthy();
     expect(await fillBy(page, ['toinen','b','luku 2','num2'], 7)).toBeTruthy();
     await chooseOp(page, '+');
+    await clickCalculateIfPresent(page);
     await expect(resultLocator(page)).toContainText(/\b12\b/);
 
     await fillBy(page, ['ensimmäinen','a','luku 1','num1'], 10);
     await fillBy(page, ['toinen','b','luku 2','num2'], 3);
     await chooseOp(page, '-');
+    await clickCalculateIfPresent(page);
     await expect(resultLocator(page)).toContainText(/\b7\b/);
 
     await fillBy(page, ['ensimmäinen','a','luku 1','num1'], 4);
     await fillBy(page, ['toinen','b','luku 2','num2'], 6);
     await chooseOp(page, '*');
+    await clickCalculateIfPresent(page);
     await expect(resultLocator(page)).toContainText(/\b24\b/);
 
     await fillBy(page, ['ensimmäinen','a','luku 1','num1'], 20);
     await fillBy(page, ['toinen','b','luku 2','num2'], 5);
     await chooseOp(page, '/');
+    await clickCalculateIfPresent(page);
     await expect(resultLocator(page)).toContainText(/\b4\b/);
   });
 
@@ -55,6 +64,7 @@ test.describe('Tehtävä 5: Laskin', () => {
     await fillBy(page, ['ensimmäinen','a','luku 1','num1'], 10);
     await fillBy(page, ['toinen','b','luku 2','num2'], 0);
     await chooseOp(page, '/');
+    await clickCalculateIfPresent(page);
     const err = page.getByText(/virhe|nollalla ei voi jakaa/i);
     await expect(err).toBeVisible();
   });

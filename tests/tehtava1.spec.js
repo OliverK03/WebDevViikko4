@@ -30,6 +30,10 @@ test.describe('Tehtävä 1: Profiilikortti', () => {
     await emailInput.fill('ada@example.com');
     await ageInput.fill('36');
 
+    // Jos toteutus vaatii "Päivitä"-napin, klikkaa sitä; muuten no-op.
+    const updateBtn = page.getByRole('button', { name: /päivitä|update/i });
+    if (await updateBtn.count()) { await updateBtn.first().click(); }
+
     await expect(page.getByText(/ada lovelace/i), 'Nimi ei päivittynyt näkyviin').toBeVisible();
     await expect(page.getByText(/ada@example\.com/i), 'Sähköposti ei päivittynyt näkyviin').toBeVisible();
     await expect(page.getByText(/\b36\b/), 'Ikä ei päivittynyt näkyviin').toBeVisible();
