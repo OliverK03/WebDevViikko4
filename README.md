@@ -47,7 +47,7 @@ Tämä repo on luotu Vite **Vanilla JS** -pohjaan. **Kaikki viiden tehtävän UI
   - Pidä selkeät labelit/placeholderit, jotta testit löytävät kentät (ohjeet alla).
 
 - **`src/main.js`**  
-  - Kirjoita tapahtumankäsittelijät ja DOM-päivityslogiikka tänne **tai** jaa alitiedostoihin (esim. `src/tasks/profile.js`, `src/tasks/counter.js` …) ja **tuo ne** `main.js`-tiedostoon:  
+  - Kirjoita tapahtumankäsittelijät ja DOM-päivityslogiikka tänne **tai vaihtoehtoisesti moduloi, eli** jaa alitiedostoihin (esim. `src/tasks/profile.js`, `src/tasks/counter.js` …) ja **tuo ne** `main.js`-tiedostoon:  
     ```js
     import './tasks/profile.js';
     import './tasks/counter.js';
