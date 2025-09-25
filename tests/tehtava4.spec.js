@@ -28,7 +28,8 @@ test.describe('Tehtävä 4: Tehtävälista', () => {
     await expect(list, 'Lista puuttuu').toBeVisible();
 
     const items = list.locator('li, [role="listitem"]');
-    await expect(items, 'Listakohteita ei löytynyt').toHaveCountGreaterThan(0);
+    // Autowait: odota että vähintään yksi item ilmestyy
+    await expect(items.last(), 'Listakohteita ei löytynyt').toBeVisible();
     await expect(items.last()).toContainText(/osta maitoa/i);
   });
 });
