@@ -94,3 +94,32 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* --- Task section layout --- */
+main {
+  display: grid;
+  gap: 1.2rem;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem;
+  text-align: left;
+}
+section {
+  background: rgba(255,255,255,0.03);
+  padding: 1rem;
+  border-radius: 8px;
+}
+section h2 { margin-top: 0; }
+label { display: inline-block; margin-right: 0.5rem; }
+input[type="number"], input[type="text"], input[type="email"], select {
+  margin-left: 0.5rem;
+}
+.color-box { display: inline-block; vertical-align: top; }
+.todo-list { margin-top: 8px; }
+.todo-list li { padding: 4px 0; }
+.counter-value { margin: 0 0.6rem; font-size: 1.1rem; }
+
+/* Error hints visible style */
+.counter-error[style*="display:none"] { display: none; }
+.counter-error { margin-top: 8px; }
+.rgb-error, .calc-error { margin-top: 8px; }
